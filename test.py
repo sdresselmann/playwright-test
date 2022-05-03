@@ -49,11 +49,6 @@ async def visitPage():
 
         dumpIntoJSON(searchResultsAsJSON)
 
-        '''
-        async with page.expect_navigation():
-            await page.wait_for_load_state("networkidle")
-            findMainElement()
-            '''
         await browser.close()
 
 
