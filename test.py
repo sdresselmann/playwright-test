@@ -11,14 +11,17 @@ async def findMainElement(page):
     print(await locator.inner_text())
 
 
+async def acceptCookies(page):
+    cookie_iframe = page.frame_locator('#sp_message_iframe_622759')
+    await cookie_iframe.locator("button[title='AKZEPTIEREN']").click()
+
+
 async def visitPage():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False, slow_mo=1500)
         page = await browser.new_page()
         await page.goto(url)
-        cookie_iframe = page.frame_locator('#sp_message_iframe_622759')
-        await cookie_iframe.locator("button[title='AKZEPTIEREN']").click()
-
+        await acceptCookies(page)
         '''
         await page.click("button[title='AKZEPTIEREN']")
         await page.fill('#edit-search-api-fulltext--2', searchword)
