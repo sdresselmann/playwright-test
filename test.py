@@ -1,5 +1,7 @@
 import asyncio
 import json
+import html_to_json
+
 from playwright.async_api import async_playwright
 
 
@@ -18,8 +20,8 @@ async def searchForWord(searchword, page):
 
 
 async def findMainElement(page):
-    locator = page.locator('main')
-    return await locator.inner_text()
+    locator = page.locator('.segment')
+    return await locator.inner_html()
 
 
 async def visitPage():
@@ -31,8 +33,12 @@ async def visitPage():
         await acceptCookies(page)
         await searchForWord(WORD, page)
         searchResults = await findMainElement(page)
+
+        output_json = html_to_json.convert(searchResults)
+        print(output_json)
+
         with open('searchResults.json', mode='w', encoding='utf-8') as file:
-            json.dump(searchResults, file, ensure_ascii=False, indent=4)
+            json.dump(output_json, file, ensure_ascii=False, indent=4)
 
         '''
         async with page.expect_navigation():
