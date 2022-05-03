@@ -9,6 +9,7 @@ async def visitPage():
         browser = await p.chromium.launch(headless=False, slow_mo=50)
         page = await browser.new_page()
         await page.goto(url)
+        await page.fill("#edit-search-api-fulltext--2", "testwort")
         await browser.close()
 
 asyncio.run(visitPage())
