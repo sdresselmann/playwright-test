@@ -5,36 +5,58 @@ import sys
 import traceback
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
+from playwright import *
 
 
 URL = 'https://www.duden.de/'
-SEARCHWORD = "Präliminarien"
+searchword = "Präliminarien"
 result_data = {"searchResults": []}
 
 
 async def acceptCookies(page):
+    '''
+       Parameters: \n
+       page (Page) \n
+    '''
     cookie_iframe = page.frame_locator('#sp_message_iframe_622759')
     await cookie_iframe.locator("button[title='AKZEPTIEREN']").click()
 
 
-async def searchForWord(searchword, page):
-    await page.fill('#edit-search-api-fulltext--2', searchword)
+async def searchForWord(word: str, page):
+    '''
+       Parameters: \n
+       word (str) -- that is entered into the search bar \n
+       page (Page) \n
+    '''
+    await page.fill('#edit-search-api-fulltext--2', word)
     await page.click('button:has-text("Nachschlagen")')
 
 
 async def getSearchResults(page):
+    '''
+       Read search result data that is stored in vignette 
+       class tags inside the main part  \n
+       Parameters: \n
+       page (Page) \n
+    '''
     locator = page.locator('.vignette')
     count = await locator.count()
-    array = ""
+    html_data = ""
     for i in range(count):
         # i+1 because locator starts at 1
         position = i+1
         locator = page.locator(':nth-match(.vignette, {0})'.format(position))
-        array = await locator.inner_html()
-        parseResults(position, array)
+        html_data = await locator.inner_html()
+        parseResults(position, html_data)
 
 
-def parseResults(key, data):
+def parseResults(key: int, data: str):
+    '''
+       Parse given data into a fixed json format \n
+       Parameters: \n
+       key (int) -- used as id number for object  \n
+       data (str) -- html text that is parsed into json format
+    '''
     global result_data
     soup = BeautifulSoup(data, "html.parser")
 
@@ -53,13 +75,17 @@ def parseResults(key, data):
     result_data[key] = json_object
 
 
-def writeDataToJSON(data):
-    with open('searchResults.json', mode='w', encoding='utf-8') as file:
+def writeDataToJSON(data: json, path: str = "searchResults.json"):
+    '''
+       Parameters: \n
+       data (json) -- that has to be written into file
+       file (str)  -- path to file
+    '''
+    with open(path, mode='w', encoding='utf-8') as file:
         json.dump(data, file, ensure_ascii=False, indent=4)
 
 
-async def visitPage():
-    print(sys.argv)
+async def crawlPage():
     global result_data
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False, slow_mo=1500)
@@ -67,7 +93,7 @@ async def visitPage():
         await page.goto(URL)
 
         await acceptCookies(page)
-        await searchForWord(SEARCHWORD, page)
+        await searchForWord(searchword, page)
 
         await getSearchResults(page)
 
@@ -77,12 +103,8 @@ async def visitPage():
 
 
 def main():
-    print("Suche startet für: {0}".format(SEARCHWORD))
-    try:
-        asyncio.run(visitPage())
-    # just in case something goes terribly wrong
-    except Exception as e:
-        logging.error(traceback.format_exc)
+    print("Suche startet für: {0}".format(searchword))
+    asyncio.run(crawlPage())
 
 
 if __name__ == "__main__":
@@ -92,5 +114,5 @@ if __name__ == "__main__":
               "\"python duden Präliminarien\" \n ")
         sys.exit(1)
 
-    SEARCHWORD = sys.argv[1]
+    searchword = sys.argv[1]
     main()
