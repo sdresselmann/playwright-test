@@ -1,8 +1,5 @@
-from ast import dump, parse
 import asyncio
 import json
-from unittest import result
-import html_to_json
 from bs4 import BeautifulSoup
 
 from playwright.async_api import async_playwright
