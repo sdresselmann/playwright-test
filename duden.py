@@ -11,7 +11,7 @@ from playwright import *
 URL = 'https://www.duden.de/'
 # example searchword for testing purposes
 searchword = "Präliminarien"
-result_data = {"searchResults": []}
+result_data = {}
 
 
 async def acceptCookies(page):
@@ -73,7 +73,8 @@ def parseResults(key: int, data: str):
         'vignette_link': vignette_link
     }
 
-    result_data[key] = json_object
+    array = [json_object]
+    result_data[key] = array
 
 
 def writeDataToJSON(data: json, path: str = "searchResults.json"):
@@ -95,7 +96,7 @@ async def crawlPage(url: str):
     # seperating tasks even more would only make the code less readable
     global result_data
     async with async_playwright() as p:
-        browser = await p.chromium.launch()
+        browser = await p.chromium.launch(slow_mo=50)
         page = await browser.new_page()
         await page.goto(url)
 
@@ -105,20 +106,23 @@ async def crawlPage(url: str):
         await getSearchResults(page)
 
         writeDataToJSON(result_data)
-
         await browser.close()
 
 
 def main():
     print("Suche startet für: {0}".format(searchword))
+
     try:
         asyncio.run(crawlPage(URL))
     # just in case something goes terribly wrong
     except Exception as e:
         logging.error(traceback.format_exc)
 
+    asyncio.run(crawlPage(URL))
+
 
 if __name__ == "__main__":
+
     if len(sys.argv) == 1:
         print("\nFehler: Es wurde kein Suchwort als Parameter übergeben! \n" +
               "Aufruf von Playwright-Bot Beispiel:" +
@@ -126,4 +130,5 @@ if __name__ == "__main__":
         sys.exit(1)
 
     searchword = sys.argv[1]
+
     main()
