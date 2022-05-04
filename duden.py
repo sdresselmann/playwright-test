@@ -5,7 +5,7 @@ from playwright.async_api import async_playwright
 
 
 URL = 'https://www.duden.de/'
-WORD = "Präliminarien"
+SEARCHWORD = "Präliminarien"
 result_data = {"searchResults": []}
 
 
@@ -36,10 +36,9 @@ def parseResults(key, data):
     soup = BeautifulSoup(data, "html.parser")
 
     vignette_title = soup.find('strong').text
+    # replacing empty spaces in strong text for better readability in json
     vignette_title = vignette_title.replace("\xad", "")
-
     vignette_snippet = soup.find('p').text
-
     vignette_link = URL + soup.find('a')['href']
 
     json_object = {
@@ -51,7 +50,7 @@ def parseResults(key, data):
     result_data[key] = json_object
 
 
-def dumpIntoJSON(data):
+def writeDataToJSON(data):
     with open('searchResults.json', mode='w', encoding='utf-8') as file:
         json.dump(data, file, ensure_ascii=False, indent=4)
 
@@ -64,11 +63,11 @@ async def visitPage():
         await page.goto(URL)
 
         await acceptCookies(page)
-        await searchForWord(WORD, page)
+        await searchForWord(SEARCHWORD, page)
 
         await getSearchResults(page)
 
-        dumpIntoJSON(result_data)
+        writeDataToJSON(result_data)
 
         await browser.close()
 
