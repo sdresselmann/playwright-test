@@ -1,6 +1,7 @@
-from ast import dump
+from ast import dump, parse
 import asyncio
 import json
+from unittest import result
 import html_to_json
 from bs4 import BeautifulSoup
 
@@ -9,6 +10,7 @@ from playwright.async_api import async_playwright
 
 URL = 'https://www.duden.de/'
 WORD = "Präliminarien"
+result_data = {"searchResults": []}
 
 
 async def acceptCookies(page):
@@ -27,14 +29,30 @@ async def findMainElement(page):
     array = ""
     for i in range(count):
         # i+1 because locator starts at 1
-        locator = page.locator(':nth-match(.vignette, {0})'.format(i+1))
+        position = i+1
+        locator = page.locator(':nth-match(.vignette, {0})'.format(position))
         array = await locator.inner_html()
-    return array
+        parseResults(position, array)
 
 
-def convertHtmlToJSON(input_html):
-    output_json = html_to_json.convert(input_html)
-    return output_json
+def parseResults(key, data):
+    global result_data
+    soup = BeautifulSoup(data, "html.parser")
+
+    vignette_title = soup.find('strong').text
+    vignette_title = vignette_title.replace("\xad", "")
+
+    vignette_snippet = soup.find('p').text
+
+    vignette_link = URL + soup.find('a')['href']
+
+    json_object = {
+        'vignette_title': vignette_title,
+        'vignette_snippet': vignette_snippet,
+        'vignette_link': vignette_link
+    }
+
+    result_data[key] = json_object
 
 
 def dumpIntoJSON(data):
@@ -43,6 +61,7 @@ def dumpIntoJSON(data):
 
 
 async def visitPage():
+    global result_data
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False, slow_mo=1500)
         page = await browser.new_page()
@@ -51,26 +70,9 @@ async def visitPage():
         await acceptCookies(page)
         await searchForWord(WORD, page)
 
-        searchResultsAsHTML = await findMainElement(page)
+        await findMainElement(page)
 
-        soup = BeautifulSoup(searchResultsAsHTML, "html.parser")
-
-        vignette_title = soup.find('strong').text
-        vignette_title = vignette_title.replace("\xad", "")
-
-        vignette_snippet = soup.find('p').text
-
-        vignette_link = URL + soup.find('a')['href']
-
-        json_object = {"searchResults": [{
-            '1': {
-                'vignette_title': vignette_title,
-                'vignette_snippet': vignette_snippet,
-                'vignette_link': vignette_link
-            }
-        }]}
-
-        dumpIntoJSON(json_object)
+        dumpIntoJSON(result_data)
 
         await browser.close()
 
