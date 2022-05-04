@@ -1,5 +1,7 @@
 import asyncio
 import json
+import sys
+import argparse
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
@@ -56,6 +58,7 @@ def writeDataToJSON(data):
 
 
 async def visitPage():
+    print(sys.argv)
     global result_data
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False, slow_mo=1500)
@@ -72,4 +75,9 @@ async def visitPage():
         await browser.close()
 
 
-asyncio.run(visitPage())
+def main():
+    asyncio.run(visitPage())
+
+
+if __name__ == "__main__":
+    main()
