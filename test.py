@@ -2,6 +2,7 @@ from ast import dump
 import asyncio
 import json
 import html_to_json
+from bs4 import BeautifulSoup
 
 from playwright.async_api import async_playwright
 
@@ -21,8 +22,14 @@ async def searchForWord(searchword, page):
 
 
 async def findMainElement(page):
-    locator = page.locator('.segment')
-    return await locator.inner_html()
+    locator = page.locator('.vignette')
+    count = await locator.count()
+    array = ""
+    for i in range(count):
+        # i+1 because locator starts at 1
+        locator = page.locator(':nth-match(.vignette, {0})'.format(i+1))
+        array = await locator.inner_html()
+    return array
 
 
 def convertHtmlToJSON(input_html):
@@ -45,9 +52,25 @@ async def visitPage():
         await searchForWord(WORD, page)
 
         searchResultsAsHTML = await findMainElement(page)
-        searchResultsAsJSON = convertHtmlToJSON(searchResultsAsHTML)
 
-        dumpIntoJSON(searchResultsAsJSON)
+        soup = BeautifulSoup(searchResultsAsHTML, "html.parser")
+
+        vignette_title = soup.find('strong').text
+        vignette_title = vignette_title.replace("\xad", "")
+
+        vignette_snippet = soup.find('p').text
+
+        vignette_link = URL + soup.find('a')['href']
+
+        json_object = {"searchResults": [{
+            '1': {
+                'vignette_title': vignette_title,
+                'vignette_snippet': vignette_snippet,
+                'vignette_link': vignette_link
+            }
+        }]}
+
+        dumpIntoJSON(json_object)
 
         await browser.close()
 
