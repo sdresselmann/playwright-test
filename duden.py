@@ -80,4 +80,10 @@ def main():
 
 
 if __name__ == "__main__":
+    if len(sys.argv) == 1:
+        print("\nFehler: Es wurde kein Suchwort als Parameter übergeben! \n" +
+              "Aufruf von Playwright-Bot Beispiel:" +
+              "\"python duden Präliminarien\" \n ")
+        sys.exit(1)
+    print(sys.argv[1])
     main()
