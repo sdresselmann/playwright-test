@@ -9,6 +9,7 @@ from playwright import *
 
 
 URL = 'https://www.duden.de/'
+# example searchword for testing purposes
 searchword = "Präliminarien"
 result_data = {"searchResults": []}
 
@@ -85,12 +86,18 @@ def writeDataToJSON(data: json, path: str = "searchResults.json"):
         json.dump(data, file, ensure_ascii=False, indent=4)
 
 
-async def crawlPage():
+async def crawlPage(url: str):
+    '''
+       Crawling the webpage and saving search results into a json file \n
+       Parameters: \n
+       url (str) -- of target webpage  \n
+    '''
+    # seperating tasks even more would only make the code less readable
     global result_data
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False, slow_mo=1500)
+        browser = await p.chromium.launch()
         page = await browser.new_page()
-        await page.goto(URL)
+        await page.goto(url)
 
         await acceptCookies(page)
         await searchForWord(searchword, page)
@@ -105,7 +112,7 @@ async def crawlPage():
 def main():
     print("Suche startet für: {0}".format(searchword))
     try:
-        asyncio.run(crawlPage())
+        asyncio.run(crawlPage(URL))
     # just in case something goes terribly wrong
     except Exception as e:
         logging.error(traceback.format_exc)
