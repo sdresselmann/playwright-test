@@ -1,7 +1,6 @@
 import asyncio
 import json
 from bs4 import BeautifulSoup
-
 from playwright.async_api import async_playwright
 
 
@@ -20,7 +19,7 @@ async def searchForWord(searchword, page):
     await page.click('button:has-text("Nachschlagen")')
 
 
-async def findMainElement(page):
+async def getSearchResults(page):
     locator = page.locator('.vignette')
     count = await locator.count()
     array = ""
@@ -67,7 +66,7 @@ async def visitPage():
         await acceptCookies(page)
         await searchForWord(WORD, page)
 
-        await findMainElement(page)
+        await getSearchResults(page)
 
         dumpIntoJSON(result_data)
 
