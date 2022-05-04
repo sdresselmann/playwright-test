@@ -79,7 +79,7 @@ def writeDataToJSON(data: json, path: str = "searchResults.json"):
     '''
        Parameters: \n
        data (json) -- that has to be written into file
-       file (str)  -- path to file
+       path (str)  -- path to file
     '''
     with open(path, mode='w', encoding='utf-8') as file:
         json.dump(data, file, ensure_ascii=False, indent=4)
@@ -104,7 +104,11 @@ async def crawlPage():
 
 def main():
     print("Suche startet für: {0}".format(searchword))
-    asyncio.run(crawlPage())
+    try:
+        asyncio.run(crawlPage())
+    # just in case something goes terribly wrong
+    except Exception as e:
+        logging.error(traceback.format_exc)
 
 
 if __name__ == "__main__":
