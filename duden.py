@@ -1,7 +1,8 @@
 import asyncio
 import json
+import logging
 import sys
-import argparse
+import traceback
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
@@ -76,7 +77,12 @@ async def visitPage():
 
 
 def main():
-    asyncio.run(visitPage())
+    print("Suche startet für: {0}".format(SEARCHWORD))
+    try:
+        asyncio.run(visitPage())
+    # just in case something goes terribly wrong
+    except Exception as e:
+        logging.error(traceback.format_exc)
 
 
 if __name__ == "__main__":
@@ -85,5 +91,6 @@ if __name__ == "__main__":
               "Aufruf von Playwright-Bot Beispiel:" +
               "\"python duden Präliminarien\" \n ")
         sys.exit(1)
-    print(sys.argv[1])
+
+    SEARCHWORD = sys.argv[1]
     main()
