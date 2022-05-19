@@ -96,7 +96,8 @@ async def crawlPage(url: str):
     # seperating tasks even more would only make the code less readable
     global result_data
     async with async_playwright() as p:
-        browser = await p.chromium.launch(slow_mo=50)
+        # without headless/slow_mo reading data sometimes gets skipped
+        browser = await p.chromium.launch(headless=False, slow_mo=500)
         page = await browser.new_page()
         await page.goto(url)
 
@@ -117,8 +118,6 @@ def main():
     # just in case something goes terribly wrong
     except Exception as e:
         logging.error(traceback.format_exc)
-
-    asyncio.run(crawlPage(URL))
 
 
 if __name__ == "__main__":
